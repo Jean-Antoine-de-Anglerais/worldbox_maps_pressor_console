@@ -1,0 +1,19 @@
+[package]
+name = "worldbox_maps_pressor_console"
+authors = ["le_ombre"]
+description = "Worldbox maps compressor and decompressor"
+version = "1.0.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0"
+flate2 = "1.0"
+serde_json = "1.0"
+rfd = "0.11"
+
+[profile.release]
+panic = "abort"  
+lto = true       
+codegen-units = 1
+opt-level = "z"  
+strip = true     
