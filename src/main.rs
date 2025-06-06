@@ -3,6 +3,8 @@ use flate2::{read::ZlibDecoder, write::ZlibEncoder, Compression};
 use rfd::FileDialog;
 use serde_json::{from_str, to_string_pretty, Value};
 use std::{
+    env,
+    fs,
     io::{self, Read, Write},
     path::PathBuf,
 };
@@ -25,14 +27,44 @@ fn wait_for_enter() {
 }
 
 fn run() -> Result<()> {
-    println!("Select the file to be processed...");
-    let input_path = open_file_dialog().context("Failed to select file")?;
-    if input_path.to_str().is_none() {
-        println!("File is not selected");
-        return Ok(());
+    let input_path: PathBuf = {
+        let mut args = env::args().skip(1);
+        if let Some(arg) = args.next() {
+            let p = PathBuf::from(arg);
+            if !p.exists() {
+                return Err(anyhow::anyhow!(
+                    "Input file does not exist: {}",
+                    p.display()
+                ));
+            }
+            p
+        } else {
+            println!("Select the file to be processed...");
+            let picked = open_file_dialog().context("Failed to select file")?;
+            if picked.to_str().is_none() {
+                println!("File is not selected");
+                return Ok(());
+            }
+            picked
+        }
+    };
+
+    let ext = input_path
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|s| s.to_lowercase());
+    match ext.as_deref() {
+        Some("wbox") | Some("wbax") | Some("json") => {
+        }
+        _ => {
+            return Err(anyhow::anyhow!(
+                "Unsupported file extension: {:?}. Allowed extensions are .wbox, .wbax, .json",
+                input_path.extension().and_then(|e| e.to_str())
+            ));
+        }
     }
 
-    let input_size = std::fs::metadata(&input_path)
+    let input_size = fs::metadata(&input_path)
         .with_context(|| format!("Failed to get the file size {}", input_path.display()))?
         .len();
     println!("\n▌ File selected: {}", input_path.display());
@@ -59,14 +91,14 @@ fn run() -> Result<()> {
     }
 
     if is_compressed {
-        let compressed_data = std::fs::read(&input_path)?;
+        let compressed_data = fs::read(&input_path)?;
         let decompressed_data = decompress(&compressed_data)?;
         let formatted_json = format_json(&decompressed_data);
-        
-        std::fs::write(&output_path, formatted_json)
+
+        fs::write(&output_path, formatted_json)
             .with_context(|| format!("File writing error in {}", output_path.display()))?;
         
-        let output_size = std::fs::metadata(&output_path)
+        let output_size = fs::metadata(&output_path)
             .with_context(|| format!("Failed to verify file size {}", output_path.display()))?
             .len();
         
@@ -75,13 +107,13 @@ fn run() -> Result<()> {
         println!("▌ Size after decompressing: {} bytes", output_size);
         println!("▌ The result is saved in: {}", output_path.display());
     } else {
-        let text = std::fs::read_to_string(&input_path)?;
+        let text = fs::read_to_string(&input_path)?;
         let compressed_data = compress(&text)?;
-        
-        std::fs::write(&output_path, compressed_data)
+
+        fs::write(&output_path, compressed_data)
             .with_context(|| format!("File writing error in {}", output_path.display()))?;
-        
-        let output_size = std::fs::metadata(&output_path)
+
+        let output_size = fs::metadata(&output_path)
             .with_context(|| format!("Failed to verify file size {}", output_path.display()))?
             .len();
         
@@ -108,7 +140,7 @@ fn save_file_dialog(suggested_name: &str) -> Option<PathBuf> {
 }
 
 fn is_file_compressed(path: &PathBuf) -> Result<bool> {
-    let data = std::fs::read(path)
+    let data = fs::read(path)
         .with_context(|| format!("File reading error {}", path.display()))?;
     
     Ok(decompress(&data).is_ok())

@@ -500,6 +500,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "pressor"
+version = "1.2.0"
+dependencies = [
+ "anyhow",
+ "flate2",
+ "rfd",
+ "serde_json",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.94"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1037,14 +1047,4 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e97b544156e9bebe1a0ffbc03484fc1ffe3100cbce3ffb17eac35f7cdd7ab36"
 dependencies = [
  "memchr",
-]
-
-[[package]]
-name = "worldbox_maps_pressor_console"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "flate2",
- "rfd",
- "serde_json",
 ]

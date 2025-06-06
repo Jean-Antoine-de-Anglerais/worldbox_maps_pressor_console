@@ -1,8 +1,8 @@
 [package]
-name = "worldbox_maps_pressor_console"
+name = "pressor"
 authors = ["le_ombre"]
 description = "Worldbox maps compressor and decompressor"
-version = "1.0.0"
+version = "1.2.0"
 edition = "2024"
 
 [dependencies]
